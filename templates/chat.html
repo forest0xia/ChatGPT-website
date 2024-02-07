@@ -9,14 +9,14 @@
     <link rel="stylesheet" href="../static/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../static/css/github-dark-dimmed.min.css">
     <link rel="stylesheet" href="../static/css/style.css">
-    <title>Cup Of tea</title>
+    <title>Cup of Tea</title>
 </head>
 <body>
   <div class="container">
     <div class="row">
       <div class="box col-xs-12">
         <div class="title">
-            <h2 class="text-center"><span style="margin-right: 10px;"><i class="fa fa-optin-monster fa-lg" aria-hidden="true"></i></span>Cup Of tea</h2>
+            <h2 class="text-center">Cup of Tea</h2>
         </div>
         <div class="answer">
           <div id="chatWindow"></div>
@@ -41,12 +41,9 @@
                       </select>
                     </div>
                     <div class="settings-common">
-                      <span><i class="fa fa-key fa-lg" aria-hidden="true"></i>&nbsp; OpenAI Key</span>
-                      <input type="text" class="form-control ipt-common api-key" placeholder="可用自己的api key">
-                    </div>
-                    <div class="settings-common">
                       <span><i class="fa fa-reddit-alien fa-lg" aria-hidden="true"></i>&nbsp; OpenAI 模型</span>
                       <select class="form-control ipt-common model">
+                        <option value="gpt-4-turbo-preview">gpt-4-turbo</option>
                         <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
                       </select>
                     </div>
@@ -80,7 +77,7 @@
               <div class="col-xs-12">
                 <textarea id="chatInput" class="form-control" rows="1"></textarea>
               </div>
-              <button id="chatBtn" class="btn btn-primary" type="button">Go !</button>
+              <button id="chatBtn" class="btn btn-primary" type="button">Send</button>
             </div>
           </div>
         </div>

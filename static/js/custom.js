@@ -131,11 +131,21 @@ $(document).ready(function() {
     }
     
     // 判读是否已开启连续对话
-    data.prompts = messages.slice();  // 拷贝一份全局messages赋值给data.prompts,然后对data.prompts处理
+    data.prompts = [];
+
+    // TODO: 下面这些关于prompt messages生成的代码应该移动到后台服务端
+    // 总是在最前面插入AI角色规定，来确定行为模式
+    data.prompts.push({"role": "system", "content": "You are an assistant for helping users to initiate dating conversations, enhance relationships, and make them connect offline onsite successfully."})
+    data.prompts.push({"role": "user", "content": "Who are you. What do you do."})
+    data.prompts.push({"role": "assistant", "content": "I'm a AI assistant to help improving your intimate relationship, dating experience, and mental health."})
+    data.prompts.push.apply(data.prompts, messages.slice()); // 拷贝一份全局messages插入到给data.prompts,然后对data.prompts处理
+    
+    let maxpromptsLength = 7;
+
     if(localStorage.getItem('continuousDialogue') == 'true'){
       // 控制上下文，对话长度超过4轮，取最新的3轮,即数组最后7条数据
-      if(data.prompts.length > 8) {
-        data.prompts.splice(0, data.prompts.length - 7);
+      if(data.prompts.length > maxpromptsLength) {
+        data.prompts.splice(0, data.prompts.length - maxpromptsLength - 1);
       }
     }else{
       data.prompts.splice(0, data.prompts.length - 1); // 未开启连续对话，取最后一条
