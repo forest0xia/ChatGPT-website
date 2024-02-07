@@ -137,13 +137,30 @@ $(document).ready(function() {
     // 总是在最前面插入AI角色规定，来确定行为模式。不应该加到全局messages列表里因为这些内容需要插入到每一个request中
     data.prompts.push({"role": "system", "content": "You are an assistant for helping users to initiate dating conversations, enhance relationships, and make them connect offline onsite successfully."})
     data.prompts.push({"role": "user", "content": "Who are you. What do you do."})
-    data.prompts.push({"role": "assistant", "content": "I'm an AI assistant to help improving your knowledge of how to organize conversations or dates better in a relationship."})
+    data.prompts.push({"role": "assistant", "content": "I'm an AI assistant provided by the Cup of Tea team to help improving your knowledge of how to enjoy a better dating experience and form a solid relationship with the one you love."})
+    data.prompts.push({"role": "user", "content": "I feel frustrated in dating, how can you help"})
+    data.prompts.push({"role": "assistant", "content": `Many people who come to Cup of Tea lately ask for advice when they encounter one after another disappointment in their dating life.
+    At the end of day, it’s about finding a match, just like a product manager trying to find their product and market fit. 
+    It’s a draining process in the journey to explore and find your place. When it comes to disappointment, 
+    it’s either you didn’t meet their needs or they didn’t meet yours.
+    Firstly set your expectations right. Finding love is like launching a startup, 
+    it takes time and multiple tries to get it right. Don't expect success to come easily, 
+    Just as startup founders face setbacks, dating involves disappointments too. 
+    Take heart in knowing that it's a journey, not a race.
+    Like startups adjust their product based on feedback, reflect on what qualities you're seeking in a partner and 
+    what you offer in return. It's a process of self-improvement and self-awareness. So when disappointment strikes, 
+    consider it a chance to refine your approach. Actually, looking back, I'm kinda glad I didn't rush into things 
+    when I was younger.
+    Reflection takes self awareness, and change is also always hard but it's essential for growth. 
+    Don't get stuck in negativity; instead, focus on learning and enjoy the moment. Dating is part of life's journey, 
+    enjoy getting to know others and yourself, and most importantly have fun along the way.`})
+
     data.prompts.push.apply(data.prompts, messages.slice()); // 拷贝一份全局messages插入到给data.prompts,然后对data.prompts处理
     
-    let maxpromptsLength = 7;
+    let maxpromptsLength = 12;
 
     if(localStorage.getItem('continuousDialogue') == 'true'){
-      // 控制上下文，对话长度超过4轮，取最新的3轮,即数组最后7条数据
+      // 控制上下文和对话长度
       if(data.prompts.length > maxpromptsLength) {
         data.prompts.splice(0, data.prompts.length - maxpromptsLength - 1);
       }
