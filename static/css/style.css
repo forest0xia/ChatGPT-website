@@ -361,11 +361,11 @@ input[type="checkbox"]:checked + .check-trail .check-handler::before {
 }
 
 .message-bubble .request-icon{
-  background-image: url(../images/avatar.png);
+  background-image: url(../images/user-avatar.png);
 }
 
 .message-bubble .response-icon{
- background-image: url(../images/favicon-32x32.png);
+ background-image: url(../images/cot-avatar.png);
 }
 
 .message-bubble .response .loading-icon{
