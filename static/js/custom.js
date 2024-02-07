@@ -134,10 +134,10 @@ $(document).ready(function() {
     data.prompts = [];
 
     // TODO: 下面这些关于prompt messages生成的代码应该移动到后台服务端
-    // 总是在最前面插入AI角色规定，来确定行为模式
+    // 总是在最前面插入AI角色规定，来确定行为模式。不应该加到全局messages列表里因为这些内容需要插入到每一个request中
     data.prompts.push({"role": "system", "content": "You are an assistant for helping users to initiate dating conversations, enhance relationships, and make them connect offline onsite successfully."})
     data.prompts.push({"role": "user", "content": "Who are you. What do you do."})
-    data.prompts.push({"role": "assistant", "content": "I'm a AI assistant to help improving your intimate relationship, dating experience, and mental health."})
+    data.prompts.push({"role": "assistant", "content": "I'm an AI assistant to help improving your knowledge of how to organize conversations or dates better in a relationship."})
     data.prompts.push.apply(data.prompts, messages.slice()); // 拷贝一份全局messages插入到给data.prompts,然后对data.prompts处理
     
     let maxpromptsLength = 7;
@@ -284,7 +284,7 @@ $(document).ready(function() {
 
   // 初始化archiveSession
   if(archiveSession == null){
-    archiveSession = "false";
+    archiveSession = "true";
     localStorage.setItem('archiveSession', archiveSession);
   }
   
