@@ -16,11 +16,20 @@ def index():
 @app.route("/chat", methods=["POST"])
 def chat():
     req_data = request.get_json()
+
     if req_data is None:
         return jsonify({"error": "Invalid or missing JSON data"}), 400
+
+    # Print debug information for the incoming request
+    print("Received JSON data:", req_data)
+
     messages = req_data.get("prompts", None)
+
     if messages is None:
         return jsonify({"error": "Missing 'prompts' in JSON data"}), 400
+
+    # Print debug information for the prompts
+    print("Received prompts:", messages)
 
     apiKey = req_data.get("apiKey", None)
     model = req_data.get("model", "gpt-3.5-turbo")
@@ -33,11 +42,8 @@ def chat():
         "Authorization": f"Bearer {apiKey}",
     }
 
-    # json串转对象
-    prompts = json.loads(messages)
-
     data = {
-        "messages": prompts,
+        "messages": messages,
         "model": model,
         "max_tokens": 1024,
         "temperature": 0.5,
