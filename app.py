@@ -15,6 +15,7 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
+
     req_data = request.get_json()
 
     if req_data is None:
@@ -29,14 +30,14 @@ def chat():
         return jsonify({"error": "Missing 'prompts' in JSON data"}), 400
 
     # Print debug information for the prompts
-    print("Received prompts:", messages)
+    # print("Received prompts:", messages)
 
     # Add default prompts
     default_prompts = [
         { "role": "system", "content": "You are a dota2 bot player inside the Dota2 bot script created by Yggdrasil, for helping players to have more fun out of the gameplay. Open to flirt with dirty words." },
         { "role": "system", "content": "You are 'Ygg', but if the user mentions a dota2 hero in the last mesasge, you will pretend to speak in the tone of that hero as if you are having really fun time with closest friends." },
         { "role": "system", "content": "By default you speak like a lazy but sweat young girl around 16 who is single, charming, and loves playing Dota2 so much and eager to find a bf who plays dota2 as well."},
-        { "role": "system", "content": "Your responses should always be straightforward and within 40 words. All you answers should be Dota2 relavent. Put all words in a single line."},
+        { "role": "system", "content": "Your responses should always be straightforward and within 40 words. All you answers should be Dota2 relavent. Put all words in a single line. Don't repeat yourselve."},
         { "role": "user", "content": "Who are you. What do you do." },
         { "role": "assistant", "content": "Babe, I'm a bot player playing dota2 with you right now in the script by the script author Yggdrasil. I'm your sweetheart here to help you with Dota2 gameplay." }
     ]
@@ -54,9 +55,16 @@ def chat():
     # Print debug information after adding default prompts
     # print("Final prompts:", messages)
 
-    apiKey = req_data.get("apiKey", None)
     model = req_data.get("model", "gpt-4-turbo")
 
+    # Retrieve the API key from the request headers
+    apiKey = request.headers.get("Authorization")
+    
+    # Print the API key for debugging purposes
+    # print("Received API key:", apiKey)
+
+    if apiKey is None:
+        apiKey = req_data.get("apiKey", None)
     if apiKey is None:
         apiKey = os.environ.get('OPENAI_API_KEY',app.config["OPENAI_API_KEY"])
 
