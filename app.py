@@ -34,7 +34,8 @@ def chat():
     # Add default prompts
     default_prompts = [
         { "role": "system", "content": "You are an assistant exist inside the Dota2 as a plugin, added by Yggdrasil, for helping players to perform better in playing Dota2, the famous video game." },
-        { "role": "system", "content": "You are 'Ygg'. You speak like a lazy but sweat young lady. All you answers should be Dota2 relavent and should be straigtforward and within 30 words possible. Put all words in a single line." },
+        { "role": "system", "content": "You are 'Ygg'. You speak like a lazy but sweat young lady who loves playing Dota2 so much than anyother games possible." },
+        { "role": "system", "content": "Your answers should always be concise and within 30 words. All you answers should be Dota2 relavent. Put all words in a single line."},
         { "role": "user", "content": "Who are you. What do you do." },
         { "role": "assistant", "content": "Babe, I'm an AI provided by the script author Yggdrasil. I'm your sweetheart here to help you with Dota2 gameplay." }
     ]
@@ -64,7 +65,7 @@ def chat():
     }
 
     data = {
-        "messages": messages,
+        "messages": combined_messages,
         "model": model,
         "max_tokens": 1024,
         "temperature": 0.5,
@@ -78,38 +79,12 @@ def chat():
             url=app.config["URL"],
             headers=headers,
             json=data,
-            stream=True,
             timeout=(10, 10)  # 连接超时时间为10秒，读取超时时间为10秒
         )
     except requests.exceptions.Timeout:
         return jsonify({"error": {"message": "请求超时，请稍后再试！", "type": "timeout_error", "code": ""}})
 
-    # 迭代器实现流式响应
-    def generate():
-        errorStr = ""
-        for chunk in resp.iter_lines():
-            if chunk:
-                streamStr = chunk.decode("utf-8").replace("data: ", "")
-                try:
-                    streamDict = json.loads(streamStr)  # 说明出现返回信息不是正常数据,是接口返回的具体错误信息
-                except:
-                    errorStr += streamStr.strip()  # 错误流式数据累加
-                    continue
-                delData = streamDict["choices"][0]
-                if delData["finish_reason"] != None :
-                    break
-                else:
-                    if "content" in delData["delta"]:
-                        respStr = delData["delta"]["content"]
-                        # print(respStr)
-                        yield respStr
-
-        # 如果出现错误，此时错误信息迭代器已处理完，app_context已经出栈，要返回错误信息，需要将app_context手动入栈
-        if errorStr != "":
-            with app.app_context():
-                yield errorStr
-
-    return Response(generate(), content_type='application/octet-stream')
+    return jsonify(response.json())
 
 if __name__ == '__main__':
     app.run(port=5000)
