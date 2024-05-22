@@ -15,11 +15,15 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    messages = request.form.get("prompts", None)
-    apiKey = request.form.get("apiKey", None)
-    model = request.form.get("model", "gpt-3.5-turbo")
+    req_data = request.get_json()
+    if req_data is None:
+        return jsonify({"error": "Invalid or missing JSON data"}), 400
+    messages = req_data.get("prompts", None)
     if messages is None:
-        return jsonify({"error": {"message": "请输入prompts！", "type": "invalid_request_error", "code": ""}})
+        return jsonify({"error": "Missing 'prompts' in JSON data"}), 400
+
+    apiKey = req_data.get("apiKey", None)
+    model = req_data.get("model", "gpt-3.5-turbo")
 
     if apiKey is None:
         apiKey = os.environ.get('OPENAI_API_KEY',app.config["OPENAI_API_KEY"])
