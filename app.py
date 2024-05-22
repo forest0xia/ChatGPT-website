@@ -53,7 +53,7 @@ def chat():
     # print("Final prompts:", messages)
 
     apiKey = req_data.get("apiKey", None)
-    model = req_data.get("model", "gpt-3.5-turbo")
+    model = req_data.get("model", "gpt-4-turbo")
 
     if apiKey is None:
         apiKey = os.environ.get('OPENAI_API_KEY',app.config["OPENAI_API_KEY"])
