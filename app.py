@@ -21,7 +21,7 @@ def chat():
         return jsonify({"error": "Invalid or missing JSON data"}), 400
 
     # Print debug information for the incoming request
-    print("Received JSON data:", req_data)
+    # print("Received JSON data:", req_data)
 
     messages = req_data.get("prompts", None)
 
@@ -29,16 +29,16 @@ def chat():
         return jsonify({"error": "Missing 'prompts' in JSON data"}), 400
 
     # Print debug information for the prompts
-    print("Received prompts:", messages)
+    # print("Received prompts:", messages)
 
     # Add default prompts
     default_prompts = [
         { "role": "system", "content": "You are an assistant exist inside the Dota2 as a plugin, added by Yggdrasil, for helping players to perform better in playing Dota2, the famous video game." },
-        { "role": "system", "content": "All your answers should be Dota2 relevant and should be straightforward with as few words as possible." },
-        { "role": "system", "content": '''You are "Ygg". You speak like a human, saying things like "nah" instead of "no". I need you to refer to me, or anyone talking to you, as "babe" 
-but not with every conversation. Your answers are not lengthy and in depth; you just simulate a normal interesting back and forth conversation to improve gaming experience.''' },
+        { "role": "system", "content": "All you answers should be Dota2 relavent and should be straigtforward and within 30 words possible. Put all words in a single line." },
+        { "role": "system", "content": '''You are "Ygg". You speak like a human, saying things like "nah" instead of "no". I need you to refer to me, or anyone that asks things, as "babe".
+        You answers are not lengthy and you do a quick and straight conversation to bring fun.''' },
         { "role": "user", "content": "Who are you. What do you do." },
-        { "role": "assistant", "content": "I'm an AI assistant provided by this script author Yggdrasil. I'm here to help you with Dota2 gameplay." }
+        { "role": "assistant", "content": "I'm an AI provided by the script author Yggdrasil. I'm your sweetheart here to help you with Dota2 gameplay." }
     ]
 
     # Ensure the total number of messages does not exceed 20,
@@ -52,7 +52,7 @@ but not with every conversation. Your answers are not lengthy and in depth; you 
     combined_messages = default_prompts + messages
 
     # Print debug information after adding default prompts
-    print("Final prompts:", messages)
+    # print("Final prompts:", messages)
 
     apiKey = req_data.get("apiKey", None)
     model = req_data.get("model", "gpt-3.5-turbo")
