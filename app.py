@@ -75,7 +75,7 @@ def chat():
     }
 
     try:
-        resp = requests.post(
+        response = requests.post(
             url=app.config["URL"],
             headers=headers,
             json=data,
