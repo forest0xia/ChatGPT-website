@@ -59,16 +59,12 @@ def chat():
     model = req_data.get("model", "gpt-4-turbo")
 
     # Retrieve the API key from the request headers
-    apiKey = request.headers.get("Authorization")
+    apiKey = request.headers.get("Authorization") or req_data.get("apiKey", None) or app.config["OPENAI_API_KEY"] or os.environ.get('OPENAI_API_KEY')
     
     # Print the API key for debugging purposes
     # print("Received API key:", apiKey)
 
-    if apiKey is None:
-        apiKey = req_data.get("apiKey", None)
-    if apiKey is None:
-        apiKey = os.environ.get('OPENAI_API_KEY',app.config["OPENAI_API_KEY"])
-
+    
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {apiKey}",
