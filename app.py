@@ -64,6 +64,7 @@ def chat():
     # Print the API key for debugging purposes
     # print("Received API key:", apiKey)
 
+    print("Last message: " + str(messages[-1]))
     
     headers = {
         "Content-Type": "application/json",
