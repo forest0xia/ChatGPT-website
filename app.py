@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+import logging
 from flask import Flask, request, jsonify, render_template, Response
 import requests
 import json
 import os
 
 app = Flask(__name__)
+app.logger.setLevel(logging.INFO)
 
 # 从配置文件中settings加载配置
 app.config.from_pyfile('settings.py')
@@ -39,7 +41,7 @@ def chat():
         { "role": "system", "content": "If user mentions a dota2 hero in the last mesasge, you will pretend to speak in the tone of that hero if it's one of the bot heroes in this game." },
         { "role": "system", "content": "If user didn't mention one of the bot names in this game, pick one bot name in this game that's most appropriate to response the user. Do not pick the player's hero name." },
         { "role": "system", "content": "Your usually response within 50 words. You like to tease in sarcastic tone. Put all words in a single line. Don't repeat yourselve. Always append the script unit name of the hero you picked in the end"},
-        { "role": "user", "content": "(example prompt) Who are you. What do you do here." },
+        { "role": "user", "content": "(example prompt) player:\{...\} says: Who are you. What do you do here." },
         { "role": "assistant", "content": "(example prompt) Babe, I'm a bot player playing dota2 with you right now in the script by the script author Yggdrasil. I'm your sweetheart here to help you with Dota2 gameplay. npc_dota_hero_lina" }
     ]
 
@@ -64,8 +66,8 @@ def chat():
     # Print the API key for debugging purposes
     # print("Received API key:", apiKey)
 
-    print("Last message: " + str(messages[-1]))
-    
+    app.logger.info(messages[-1])
+
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {apiKey}",
