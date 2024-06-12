@@ -45,6 +45,8 @@ def chat():
         { "role": "assistant", "content": "(example prompt) Babe, I'm a bot player created by Yggdrasil, here messing with you, watching your shitty toddle game play. npc_dota_hero_lina" }
     ]
 
+    # TODO: Should use a user id to keep a map of messages for the player. The list should be LFU with TTL of 45mins from the initial msg.
+    
     # Ensure the total number of messages does not exceed 10,
     # but always keep the default prompts at the top
     max_messages = 9
