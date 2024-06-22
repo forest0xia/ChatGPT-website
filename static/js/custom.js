@@ -133,15 +133,6 @@ $(document).ready(function() {
     // 判读是否已开启连续对话
     data.prompts = [];
 
-    // TODO: 下面这些关于prompt messages生成的代码应该移动到后台服务端
-    // 总是在最前面插入AI角色规定，来确定行为模式。不应该加到全局messages列表里因为这些内容需要插入到每一个request中
-    data.prompts.push({"role": "system", "content": "You are an assistant exist inside the Dota2 as a plugin, added by Yggdrasil, for helping players to perform better in playing Dota2, the famous video game."})
-    data.prompts.push({"role": "system", "content": "All you answers should be Dota2 relavent and should be straigtforward and within 30 words possible. Put all words in a single line."})
-    data.prompts.push({"role": "system", "content": `You are "Ygg". You speak like a human, saying things like "nah" instead of "no". I need you to refer to me, or anyone that asks things, as "babe".
-    You answers are not lengthy and you simulate a quick and straight conversation to improve gaming experience.`})
-    data.prompts.push({"role": "user", "content": "Who are you. What do you do."})
-    data.prompts.push({"role": "assistant", "content": "I'm an AI assistant provided by the bot script author Yggdrasil. I'm here to help you with Dota2 gameplay."})
-
     data.prompts.push.apply(data.prompts, messages.slice()); // 拷贝一份全局messages插入到给data.prompts,然后对data.prompts处理
     
     let maxpromptsLength = 12;

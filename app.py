@@ -6,7 +6,20 @@ import json
 import os
 from datetime import datetime, timedelta
 
+# only allow x requests across all users per hour.
 MAX_REQUEST_PER_HOUR = 10
+
+MAX_TOKEN_PER_REQUEST = 1000
+
+# Ensure the total number of messages does not exceed x, should always keep the default prompts at the top
+MAX_MESSAGES_COUNT_PER_REQUEST = 7
+
+# default gpt model to use
+GPT_MODEL = "gpt-4o"
+
+# default server ports
+PRODUCTION_SERVER_PORT = 5000
+DEV_SERVER_PORT = 5000
 
 class RequestHandler:
     def __init__(self, max_requests_per_hour = MAX_REQUEST_PER_HOUR):
@@ -66,12 +79,9 @@ class RequestHandler:
 
         # TODO: Should use a user id to keep a map of messages for the player. The list should be LFU with TTL of 45mins from the initial msg.
         
-        # Ensure the total number of messages does not exceed 10,
-        # but always keep the default prompts at the top
-        max_messages = 7
         num_default_prompts = len(default_prompts)
-        if len(messages) > (max_messages - num_default_prompts):
-            messages = [messages[0]] + messages[-(max_messages - num_default_prompts):]
+        if len(messages) > (MAX_MESSAGES_COUNT_PER_REQUEST - num_default_prompts):
+            messages = [messages[0]] + messages[-(MAX_MESSAGES_COUNT_PER_REQUEST - num_default_prompts):]
 
         # Combine default prompts with incoming messages
         combined_messages = default_prompts + messages
@@ -79,7 +89,7 @@ class RequestHandler:
         # Print debug information after adding default prompts
         # app.logger.info("Final prompts:", combined_messages)
 
-        model = req_data.get("model", "gpt-4o")
+        model = GPT_MODEL # req_data.get("model", GPT_MODEL)
 
         # Retrieve the API key from the request headers
         apiKey = request.headers.get("Authorization") or req_data.get("apiKey", None) or app.config["OPENAI_API_KEY"] or os.environ.get('OPENAI_API_KEY')
@@ -97,7 +107,7 @@ class RequestHandler:
         data = {
             "messages": combined_messages,
             "model": model,
-            "max_tokens": 1000,
+            "max_tokens": MAX_TOKEN_PER_REQUEST,
             "temperature": 0.5,
             "top_p": 1,
             "n": 1,
@@ -170,5 +180,14 @@ def handle_internal_error(error):
     response = jsonify({"error": "Internal Server Error", "message": error.description})
     return response, 500
 
+# Load stage from system environment variables
+stage = os.environ.get('STAGE') or 'prod'
+
 if __name__ == '__main__':
-    app.run(port=5000)
+    if stage == 'prod':
+        app.logger.info('Setup production server')
+        from waitress import serve
+        serve(app, host = "0.0.0.0", port = PRODUCTION_SERVER_PORT)
+    else:
+        app.logger.info('Setup development server')
+        app.run(debug = True, port = DEV_SERVER_PORT)
