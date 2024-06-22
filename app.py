@@ -94,7 +94,7 @@ class RequestHandler:
         data = {
             "messages": combined_messages,
             "model": model,
-            "max_tokens": 2500,
+            "max_tokens": 1000,
             "temperature": 0.5,
             "top_p": 1,
             "n": 1,
