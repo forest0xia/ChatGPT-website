@@ -114,7 +114,7 @@ class RequestHandler:
         combined_messages = default_prompts + messages
 
         # Print debug information after adding default prompts
-        print("Final prompts:", combined_messages)
+        # print("Final prompts:", combined_messages)
 
         model = GOT_MODEL_3d5 # cheap
         # model = req_data.get("model", GPT_MODEL_4o) # expensive
