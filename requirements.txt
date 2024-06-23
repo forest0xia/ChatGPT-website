@@ -2,5 +2,6 @@ Flask==3.0
 requests==2.25.1
 gunicorn==21.2.0
 waitress==2.1.2
+dnspython==2.6.1
 pymongo==4.1.1
 pytz==2024.1
