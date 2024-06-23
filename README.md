@@ -19,6 +19,8 @@
 
 5. `python <PATH>\app.py` to run the server locally.
 
+6. Environment variables. Make sure to set vars for: `OPENAI_API_KEY` - your app key for openAI, `DB_PASS` - your mongodb database password, `STAGE` as `prod` for your prod server.
+
 ## 23 年 5.12 日更新
 
  1. 可选多种页面主题。
