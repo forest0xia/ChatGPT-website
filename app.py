@@ -24,10 +24,6 @@ GOT_MODEL_3d5 = "gpt-3.5-turbo"
 PRODUCTION_SERVER_PORT = 5000
 DEV_SERVER_PORT = 5000
 
-# Google Analytics Tracking ID
-GA_TRACKING_ID = 'G-L7BK6S4BKL'
-
-
 # set connection string
 db_password = os.environ.get('DB_PASS') or None
 if db_password == None:
