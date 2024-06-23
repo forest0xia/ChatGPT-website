@@ -119,8 +119,10 @@ class RequestHandler:
         steam_id = json_message['player']['steamId'] # error prone, need null check
 
         # persist last message to db
+        utc_time = datetime.now(utc)
         new_db_record = { 
-            "createdTime": datetime.now(utc), 
+            "createdTime": utc_time, 
+            "updatedTime": utc_time, 
             "message": last_message['content'],
             "steamId": steam_id,
             "duplicateCount": 1
@@ -134,7 +136,7 @@ class RequestHandler:
                 {"steamId": steam_id},
                 {
                     "$set": {
-                        "createdTime": datetime.now(utc),
+                        "updatedTime": utc_time,
                         "message": last_message['content'],
                     },
                     "$inc": {"duplicateCount": 1}
@@ -219,10 +221,13 @@ def hello():
 
         if req_data is None:
             return jsonify({"error": "Invalid or missing JSON data"}), 400
+        
+        utc_time = datetime.now(utc)
         for player in req_data:
             new_db_record = { 
                 "steamId": player.get('steamId', None), 
-                "createdTime": datetime.now(utc), 
+                "createdTime": utc_time, 
+                "updatedTime": utc_time, 
                 "name": player.get('name', None), 
                 "fretbots_difficulty": player.get('fretbots_difficulty', None),
                 "duplicateCount": 1 # count the number of times the player has been involved in a new game.
@@ -237,7 +242,7 @@ def hello():
                     {
                         "$set": {
                             "name": player.get('name', None), 
-                            "createdTime": datetime.now(utc),
+                            "updatedTime": utc_time, 
                             "fretbots_difficulty": player.get('fretbots_difficulty', None),
                         },
                         "$inc": {"duplicateCount": 1}
