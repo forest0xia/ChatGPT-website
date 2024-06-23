@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient, errors
 from pytz import utc
 import json
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # only allow x requests across all users per hour.
 MAX_REQUEST_PER_HOUR = 20
@@ -24,6 +25,10 @@ GOT_MODEL_3d5 = "gpt-3.5-turbo"
 # default server ports
 PRODUCTION_SERVER_PORT = 5000
 DEV_SERVER_PORT = 5000
+
+# URL to hit for the background refresh to keep as an active server.
+BACKGROUND_REFRESH_URL = 'https://chatgpt-with-dota2bot.onrender.com/ping'
+# BACKGROUND_REFRESH_URL = 'http://127.0.0.1:5000/ping' # dev env
 
 # set connection string
 db_password = os.environ.get('DB_PASS') or None
@@ -209,6 +214,10 @@ app.logger.setLevel(logging.INFO)
 # 从配置文件中settings加载配置
 app.config.from_pyfile('settings.py')
 
+@app.route("/ping", methods=["GET"])
+def ping():
+    return jsonify("pong"), 200
+
 @app.route("/", methods=["GET"])
 def index():
     return render_template("chat.html")
@@ -270,11 +279,33 @@ def handle_internal_error(error):
 # Load stage from system environment variables
 stage = os.environ.get('STAGE') or 'prod'
 
+# Refresh server to keep it alive - some free host service will shotdown the server if its not active.
+def refresh_server():
+    try:
+        response = requests.get(BACKGROUND_REFRESH_URL)
+        if response.status_code == 200:
+            app.logger.info('Server refreshed')
+        else:
+            app.logger.error(f'Failed to refresh server with status code: {response.status_code}')
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f'Error during refresh: {str(e)}')
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=refresh_server, trigger="interval", minutes=2)
+
+
 if __name__ == '__main__':
-    if stage == 'prod':
-        app.logger.info('Start production server')
-        from waitress import serve
-        serve(app, host = "0.0.0.0", port = PRODUCTION_SERVER_PORT)
-    else:
-        app.logger.info('Start development server')
-        app.run(debug = True, port = DEV_SERVER_PORT)
+    try:
+        # Start server
+        if stage == 'prod':
+            # Set up the scheduler for prod env
+            app.logger.info("Start scheduler to refresh server in background")
+            scheduler.start()
+
+            app.logger.info('Start production server')
+            from waitress import serve
+            serve(app, host = "0.0.0.0", port = PRODUCTION_SERVER_PORT)
+        else:
+            app.logger.info('Start development server')
+            app.run(debug = True, port = DEV_SERVER_PORT)
+    except (KeyboardInterrupt, SystemExit):
+        scheduler.shutdown()

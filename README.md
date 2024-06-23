@@ -15,6 +15,10 @@
 
 3. 本项目支持流式响应，`markdown` 实时转换为 `html`！
 
+4. `pip install -r <PATH>\requirements.txt` to install the dependencies locally. 
+
+5. `python <PATH>\app.py` to run the server locally.
+
 ## 23 年 5.12 日更新
 
  1. 可选多种页面主题。
