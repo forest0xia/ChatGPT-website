@@ -7,9 +7,10 @@ import os
 from datetime import datetime, timedelta
 from pymongo import MongoClient, errors
 from pytz import utc
+import json
 
 # only allow x requests across all users per hour.
-MAX_REQUEST_PER_HOUR = 10
+MAX_REQUEST_PER_HOUR = 20
 
 MAX_TOKEN_PER_REQUEST = 1000
 
@@ -87,7 +88,7 @@ class RequestHandler:
             { "role": "system", "content": "Mimic the tone of any mentioned Dota2 hero. If no hero is mentioned, choose an appropriate hero from the Bot players in this game, do not choose the player's hero" },
             { "role": "system", "content": "While try speak more as you can, but respond in 280 words max, single line, no repeats. In the end append hero internal name as hidden command with prefix npc_dota_hero_" },
             { "role": "system", "content": "If the players says something like ? or ??? or ez or impolite words, response in sarcastic tone with taunt." },
-            { "role": "user", "content": "(example) player:{...} says: Who are you. What do you do here" },
+            { "role": "user", "content": "(example) {\"player\":{...}, \"said\":\"Who are you. What do you do here\""},
             { "role": "assistant", "content": "(example) Babe, I'm a bot player created by Yggdrasil, here messing with you, watching your shitty toddle game play and point you to the right direction. npc_dota_hero_lina" }
         ]
 
@@ -114,15 +115,32 @@ class RequestHandler:
 
         last_message = messages[-1]
         app.logger.info(last_message)
+        json_message = json.loads(last_message['content'])
+        steam_id = json_message['player']['steamId'] # error prone, need null check
 
         # persist last message to db
-        new_record = { 
+        new_db_record = { 
             "createdTime": datetime.now(utc), 
-            "message": last_message, 
+            "message": last_message['content'],
+            "steamId": steam_id,
+            "duplicateCount": 1
         }
         
         try:
-            db_collection_chat.insert_one(new_record)
+            db_collection_chat.insert_one(new_db_record)
+        except errors.DuplicateKeyError:
+            # If the document exists, increment the duplicateCount
+            db_collection_chat.update_one(
+                {"steamId": steam_id},
+                {
+                    "$set": {
+                        "createdTime": datetime.now(utc),
+                        "message": last_message['content'],
+                    },
+                    "$inc": {"duplicateCount": 1}
+                },
+                upsert = True
+            )
         except Exception as e:
             app.logger.error(str(e))
 
@@ -202,7 +220,7 @@ def hello():
         if req_data is None:
             return jsonify({"error": "Invalid or missing JSON data"}), 400
         for player in req_data:
-            new_record = { 
+            new_db_record = { 
                 "steamId": player.get('steamId', None), 
                 "createdTime": datetime.now(utc), 
                 "name": player.get('name', None), 
@@ -211,7 +229,7 @@ def hello():
             }
             
             try:
-                db_collection_player.insert_one(new_record)
+                db_collection_player.insert_one(new_db_record)
             except errors.DuplicateKeyError:
                 # If the document exists, increment the duplicateCount
                 db_collection_player.update_one(
@@ -249,9 +267,9 @@ stage = os.environ.get('STAGE') or 'prod'
 
 if __name__ == '__main__':
     if stage == 'prod':
-        app.logger.info('Setup production server')
+        app.logger.info('Start production server')
         from waitress import serve
         serve(app, host = "0.0.0.0", port = PRODUCTION_SERVER_PORT)
     else:
-        app.logger.info('Setup development server')
+        app.logger.info('Start development server')
         app.run(debug = True, port = DEV_SERVER_PORT)
