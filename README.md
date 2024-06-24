@@ -21,6 +21,8 @@
 
 6. Environment variables. Make sure to set vars for: `OPENAI_API_KEY` - your app key for openAI, `DB_PASS` - your mongodb database password, `STAGE` as `prod` for your prod server.
 
+7. Can setup a cron job or external server to periodically call the render server to keep it alive: https://keepalive.dashdashhard.com/.
+
 ## 23 年 5.12 日更新
 
  1. 可选多种页面主题。
