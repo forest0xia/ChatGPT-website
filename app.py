@@ -11,7 +11,7 @@ import json
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # only allow x requests across all users per hour.
-MAX_REQUEST_PER_HOUR = 20
+MAX_REQUEST_PER_HOUR = 50
 
 MAX_TOKEN_PER_REQUEST = 1000
 
