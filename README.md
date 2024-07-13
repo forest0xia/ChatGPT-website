@@ -17,7 +17,7 @@
 
 4. `pip install -r <PATH>\requirements.txt` to install the dependencies locally. 
 
-5. `python <PATH>\app.py` to run the server locally.
+5. Cd in to the repo root folder, run: `pip install -r requirements.txt`. Or: `python <PATH>\app.py` to run the server locally.
 
 6. Environment variables. Make sure to set vars for: `OPENAI_API_KEY` - your app key for openAI, `DB_PASS` - your mongodb database password, `STAGE` as `prod` for your prod server.
 

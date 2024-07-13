@@ -7,12 +7,12 @@ import os
 from datetime import datetime, timedelta
 from pymongo import MongoClient, errors
 from pytz import utc
-import json
+from collections import defaultdict
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # only allow x requests across all users per hour.
-MAX_REQUEST_PER_HOUR = 50
-
+MAX_REQUEST_PER_HOUR = 60
+MAX_USER_REQUESTS_PER_HOUR = 30
 MAX_TOKEN_PER_REQUEST = 1000
 
 # Ensure the total number of messages does not exceed x, should always keep the default prompts at the top
@@ -41,30 +41,61 @@ db_collection_player = database['player-data']
 db_collection_chat = database['player-chat']
 
 class RequestHandler:
-    def __init__(self, max_requests_per_hour = MAX_REQUEST_PER_HOUR):
+    def __init__(self, max_requests_per_hour=MAX_REQUEST_PER_HOUR, max_user_requests_per_hour=MAX_USER_REQUESTS_PER_HOUR):
         self.max_requests_per_hour = max_requests_per_hour
-        self.requests_count = 0
+        self.max_user_requests_per_hour = max_user_requests_per_hour
+        self.total_requests_count = 0
+        self.user_requests_count = defaultdict(int)
         self.start_time = datetime.now()
+        self.user_start_times = defaultdict(datetime.now)
 
     def handle_request(self, request):
         current_time = datetime.now()
-        if self.requests_count < self.max_requests_per_hour:
-            self.requests_count += 1
-            return self.process_request(request)
-        else:
+        req_data = request.get_json()
+
+        if req_data is None:
+            return jsonify({"error": "Invalid or missing JSON data"}), 400
+
+        last_message = req_data.get("prompts", [{}])[-1]
+        json_message = json.loads(last_message.get('content', '{}'))
+        steam_id = json_message.get('player', {}).get('steamId')
+
+        if not steam_id:
+            return jsonify({"error": "Missing 'steamId' in JSON data"}), 400
+
+        user_requests_count = self.user_requests_count[steam_id]
+        user_start_time = self.user_start_times[steam_id]
+        
+        # Reset total requests count if an hour has passed
+        if current_time - self.start_time >= timedelta(hours=1):
+            self.total_requests_count = 0
+            self.start_time = current_time
+        
+        # Reset user requests count if an hour has passed
+        if current_time - user_start_time >= timedelta(hours=1):
+            self.user_requests_count[steam_id] = 0
+            self.user_start_times[steam_id] = current_time
+        
+        # Check user-specific request limit
+        if user_requests_count >= self.max_user_requests_per_hour:
+            time_since_start = current_time - user_start_time
+            formatted_time_remaining = str(timedelta(hours=1) - time_since_start).split('.')[0]
+            err_msg = f"User request limit reached. OpenAI chatting isn't free. Try again in {formatted_time_remaining}"
+            raise Exception(err_msg)
+
+        # Check total request limit for all users
+        if self.total_requests_count >= self.max_requests_per_hour:
             time_since_start = current_time - self.start_time
-            if time_since_start >= timedelta(hours = 1):
-                # Reset the counter and start time after an hour has passed
-                self.requests_count = 1
-                self.start_time = current_time
-                return self.process_request(request)
-            else:
-                # Reject the request if the limit has been reached and an hour has not yet passed
-                formatted_time_remaining = str(timedelta(hours = 1) - time_since_start).split('.')[0]  # Remove microseconds
-                err_msg = f"Request limit reached. OpenAI chatting isn't free. Try again in {formatted_time_remaining}"
-                app.logger.error(err_msg)
-                raise Exception(err_msg)
-            
+            formatted_time_remaining = str(timedelta(hours=1) - time_since_start).split('.')[0]
+            err_msg = f"Total request limit reached. OpenAI chatting isn't free. Try again in {formatted_time_remaining}"
+            raise Exception(err_msg)
+
+        # If limits are not exceeded, process the request
+        self.user_requests_count[steam_id] += 1
+        self.total_requests_count += 1
+
+        return self.process_request(request)
+
     def process_request(self, request):
         req_data = request.get_json()
 
@@ -83,7 +114,7 @@ class RequestHandler:
             return jsonify({"error": "Missing 'prompts' in JSON data"}), 400
         
         # default initial msg from frontend as health ping
-        if 'How do you feel at this very moment' in  messages[-1].get("content", None):
+        if 'How do you feel at this very moment' in messages[-1].get("content", None):
             app.logger.info('Initialized a new game...')
             return jsonify({"ping": "pong"}), 200
 
@@ -146,7 +177,7 @@ class RequestHandler:
                     },
                     "$inc": {"duplicateCount": 1}
                 },
-                upsert = True
+                upsert=True
             )
         except Exception as e:
             app.logger.error(str(e))
@@ -192,7 +223,7 @@ class RequestHandler:
                         errorStr += streamStr.strip()  # 错误流式数据累加
                         continue
                     delData = streamDict["choices"][0]
-                    if delData["finish_reason"] != None :
+                    if delData["finish_reason"] != None:
                         break
                     else:
                         if "content" in delData["delta"]:
@@ -256,7 +287,7 @@ def hello():
                         },
                         "$inc": {"duplicateCount": 1}
                     },
-                    upsert = True
+                    upsert=True
                 )
     except Exception as e:
         abort(500, description=str(e))
