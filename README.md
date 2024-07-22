@@ -23,6 +23,15 @@
 
 7. Can setup a cron job or external server to periodically call the render server to keep it alive: https://keepalive.dashdashhard.com/.
 
+
+### Host dota2 and create lobby remotely
+1. Download Go: https://go.dev/dl/
+1. CD into the `...\go_dota2\...` folder of where you downloaded the script. For example: `cd ...\go_dota2\...`
+1. `go mod init oha`
+1. `go mod tidy`
+1. `go run createLobby.go`
+
+
 ## 23 年 5.12 日更新
 
  1. 可选多种页面主题。
