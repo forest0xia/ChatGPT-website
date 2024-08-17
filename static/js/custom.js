@@ -145,14 +145,15 @@ $(document).ready(function() {
     }else{
       data.prompts.splice(0, data.prompts.length - 1); // 未开启连续对话，取最后一条
     }
-    data.prompts = JSON.stringify(data.prompts);
+    // data.prompts = JSON.stringify(data.prompts);
     
     let res;
     // 发送信息到后台
     ajaxRequest = $.ajax({
       url: '/chat',
       method: 'POST',
-      data: data,
+      contentType: "application/json; charset=utf-8",
+      data: JSON.stringify(data),
       xhrFields: {
         onprogress: function(e) {
           res = e.target.responseText;
@@ -187,7 +188,7 @@ $(document).ready(function() {
             localStorage.setItem("session",JSON.stringify(messages));
           }
         } else {
-          addFailMessage('出错啦！请稍后再试!');
+          addFailMessage(jqXHR.responseJSON.message);
         }
       },
       complete : function(XMLHttpRequest,status){

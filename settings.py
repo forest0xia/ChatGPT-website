@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # SECRET_KEY（flask项目密钥,不用管,也用不到）
-SECRET_KEY = "asghnjadfbtywyn"
+SECRET_KEY = ""
 
 # openAi api key
 OPENAI_API_KEY = ""
