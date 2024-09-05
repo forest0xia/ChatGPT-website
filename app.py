@@ -317,7 +317,7 @@ def start():
     response = None
     try:
         req_data = request.get_json()
-        app.logger.info("Api start request data:", req_data)
+        app.logger.info(f"Api start request data: {req_data}")
 
         if req_data is None:
             return jsonify({"error": "Invalid or missing JSON data"}), 400
@@ -344,6 +344,7 @@ def start():
         # print("Last update time (Unix) in the Workshop item:", update_time)
         # print("response:", response)
 
+        # of course, this IP is the host's address. but this wil be reused/assumed for all other players in the game.
         ip_addr = get_ip_location(request)
             
         utc_time = datetime.now(utc)
@@ -393,7 +394,7 @@ def start():
 def hello():
     try:
         req_data = request.get_json()
-        print("Api hello request data:", req_data)
+        app.logger.info(f"Api hello request data: {req_data}")
 
         if req_data is None:
             return jsonify({"error": "Invalid or missing JSON data"}), 400
@@ -426,6 +427,7 @@ def hello():
                     upsert=True
                 )
     except Exception as e:
+        app.logger.error(f"Api hello error: {e}")
         abort(500, description=str(e))
     
     return jsonify({"message": "hellow world"}), 200
