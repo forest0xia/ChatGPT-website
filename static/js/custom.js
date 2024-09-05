@@ -276,7 +276,7 @@ $(document).ready(function() {
   })
 
   // 是否保存历史对话
-  var archiveSession = localStorage.getItem('archiveSession');
+  var archiveSession = false; //localStorage.getItem('archiveSession');
 
   // 初始化archiveSession
   if(archiveSession == null){
