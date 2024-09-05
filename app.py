@@ -139,7 +139,7 @@ class RequestHandler:
             self.user_requests_count[steam_id] += 1
             self.total_requests_count += 1
 
-            ip_addr = get_ip_address()
+            ip_addr = get_ip_address(request)
             app.logger.info("chat caller client ip address: " + ip_addr + ", steam_id: " + steam_id)
 
             return self.process_request(request, steam_id)
@@ -344,7 +344,7 @@ def start():
         # print("Last update time (Unix) in the Workshop item:", update_time)
         # print("response:", response)
 
-        ip_addr = get_ip_location()
+        ip_addr = get_ip_location(request)
             
         utc_time = datetime.now(utc)
 
@@ -461,16 +461,16 @@ def get_version_timestamp_from_request(local_version):
     timestamp = int(time.mktime(datetime_obj.timetuple()))
     return timestamp
 
-def get_ip_address():
-    client_ip = ""
-    if request.headers.getlist("X-Forwarded-For"):
-        client_ip = request.headers.getlist("X-Forwarded-For")[0]
-    else:
-        client_ip = request.remote_addr
+def get_ip_address(request):
+    client_ip = request.access_route[0]
+    # if request.headers.getlist("X-Forwarded-For"):
+    #     client_ip = request.headers.getlist("X-Forwarded-For")[0]
+    # else:
+    #     client_ip = request.remote_addr
     return client_ip
 
-def get_ip_location():
-    client_ip = get_ip_address()
+def get_ip_location(request):
+    client_ip = get_ip_address(request)
     geolocation_res = requests.get(f"https://ipinfo.io/{client_ip}/json")
     # Get geolocation data
     geolocation = geolocation_res.json()
@@ -485,10 +485,10 @@ def get_ip_location():
     }
     return ip_addr
 
-async def get_ip_location_async():
+async def get_ip_location_async(request):
     # Get the client's IP address considering proxy headers. 
     # This ip is for the player that host the game, not accurate for all players if there are other players in that lobby.
-    client_ip = get_ip_address()
+    client_ip = get_ip_address(request)
 
     async with httpx.AsyncClient() as client:
         try:
