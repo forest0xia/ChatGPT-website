@@ -13,7 +13,7 @@ from collections import defaultdict
 from apscheduler.schedulers.background import BackgroundScheduler
 from eventlet.timeout import Timeout
 
-WORKSHOP_ID = '3246316298'
+WORKSHOP_ID = 3246316298
 
 # only allow x requests across all dota2 (from a steam client) users per hour.
 MAX_REQUEST_PER_HOUR = 60
@@ -69,6 +69,27 @@ class RequestHandler:
         self.start_time = datetime.now()
         self.user_start_times = defaultdict(datetime.now)
 
+    def validate_request(self, req_data):
+        try:
+            local_version = req_data.get("version", "") # e.g. "0.7.37c - 2024/8/31"
+            local_version_timestamp = get_version_timestamp_from_request(local_version)
+            scriptID = req_data.get("scriptID", "")
+            nameSuffix = req_data.get("nameSuffix", "")
+            if scriptID != WORKSHOP_ID:
+                raise Exception(f"Wrong script id: {scriptID}")
+
+            update_time = get_workshop_update_time() # e.g. 1725174880
+            if update_time and (update_time - DELTA_N_DAYS_SECONDS) > local_version_timestamp:
+                raise Exception(f"Wrong version timestamp: {local_version}")
+            
+            if nameSuffix != "OHA":
+                raise Exception(f"Wrong bot's name suffix: {nameSuffix}")
+            
+        except Exception as e:
+            return False
+        
+        return True
+
     def handle_request(self, request):
         try:
             # Log the raw data
@@ -76,6 +97,11 @@ class RequestHandler:
             
             current_time = datetime.now()
             req_data = request.get_json()
+
+            app.logger.info(f"Api chat request data: {req_data}")
+
+            if not self.validate_request(req_data):
+                return jsonify({"error": "Invalid request. Make sure to update the script by re-subscripting Open Hyper AI (OHA), or check the Workshop page if you need help."}), 400
 
             if req_data is None:
                 return jsonify({"error": "Invalid or missing JSON data"}), 400
