@@ -16,7 +16,7 @@ from eventlet.timeout import Timeout
 WORKSHOP_ID = 3246316298
 
 # only allow x requests across all dota2 (from a steam client) users per hour.
-MAX_REQUEST_PER_HOUR = 60
+MAX_REQUEST_PER_HOUR = 90
 # only allow x requests for individual dota2 (from a steam client) user per hour.
 MAX_USER_REQUESTS_PER_HOUR = 30
 # only allow x requests across all website users (not from a steam client) per hour.
@@ -27,7 +27,7 @@ MAX_WEBSITE_USER_REQUESTS_PER_HOUR = 3
 MAX_TOKEN_PER_REQUEST = 1000
 
 # Ensure the total number of messages does not exceed x, should always keep the default prompts at the top
-MAX_MESSAGES_COUNT_PER_REQUEST = 8
+MAX_MESSAGES_COUNT_PER_REQUEST = 9
 
 # default gpt model to use. Pricing: https://openai.com/api/pricing/
 GPT_MODEL_4mini = "gpt-4o-mini"
@@ -42,7 +42,7 @@ DEV_SERVER_PORT = 5000
 REQUEST_TIMEOUT = 10
 
 # check for updates. buffer with n days. just to be safe in case of time zone issues.
-DELTA_N_DAYS_SECONDS = 2 * 86400
+DELTA_N_DAYS_SECONDS = 3 * 86400
 
 # URL to hit for the background refresh to keep as an active server.
 BACKGROUND_REFRESH_URL = 'https://chatgpt-with-dota2bot.onrender.com/ping'
