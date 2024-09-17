@@ -60,6 +60,14 @@ db_collection_chat = database['player-chat']
 
 ipinfo_key = os.environ.get('IP_KEY') or None
 
+# Get the absolute path of the directory where the script resides
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Construct the full path to the JSON file
+json_file_path = os.path.join(script_dir, 'country_names.json')
+# Load country names from the JSON file once
+with open(json_file_path, 'r') as f:
+    COUNTRY_NAMES = json.load(f)
+
 class RequestHandler:
     def __init__(self, max_requests_per_hour=MAX_REQUEST_PER_HOUR, max_user_requests_per_hour=MAX_USER_REQUESTS_PER_HOUR):
         self.max_requests_per_hour = max_requests_per_hour
@@ -165,8 +173,8 @@ class RequestHandler:
             self.user_requests_count[steam_id] += 1
             self.total_requests_count += 1
 
-            ip_addr = get_ip_address(request)
-            app.logger.info("chat caller client ip address: " + ip_addr + ", steam_id: " + steam_id)
+            ip_addr = get_ip_location(request)
+            app.logger.info(f"chat caller client ip address: {ip_addr}, steam_id: {steam_id}")
 
             return self.process_request(request, steam_id)
 
@@ -377,7 +385,8 @@ def start():
 
         for player in players:
             steamId = player.get('steamId', None)
-            app.logger.info("Client host ip location: %s, steam_id: %s", ip_addr, steamId)
+            name = player.get('name', None)
+            app.logger.info(f"Client host ip location: {ip_addr}, steam_id: {steamId}, player_name: {name}")
 
             new_db_record = { 
                 "steamId": steamId, 
@@ -503,7 +512,9 @@ def get_ip_location(request):
     # Get geolocation data
     geolocation = geolocation_res.json()
 
-    country = geolocation.get("country")
+    country_code = geolocation.get("country")
+    country = COUNTRY_NAMES.get(country_code, country_code)  # Defaults to code if name not found
+
     region = geolocation.get("region")
     city = geolocation.get("city")
     ip_addr = {
