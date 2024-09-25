@@ -511,7 +511,7 @@ def get_ip_address(request):
 
 def get_ip_location(request):
     client_ip = get_ip_address(request)
-    geolocation_res = requests.get(f"https://ipinfo.io/{client_ip}/json")
+    geolocation_res = requests.get(f"https://ipinfo.io/{client_ip}/json?token=" + ipinfo_key)
     # Get geolocation data
     geolocation = geolocation_res.json()
 
