@@ -5,6 +5,8 @@ from flask import Flask, request, jsonify, render_template, Response, abort
 import requests
 import httpx
 import json
+import random
+import threading
 import os
 from datetime import datetime, timedelta
 from pymongo import MongoClient, errors
@@ -47,6 +49,9 @@ DELTA_N_DAYS_SECONDS = 3 * 86400
 # URL to hit for the background refresh to keep as an active server.
 BACKGROUND_REFRESH_URL = 'https://chatgpt-with-dota2bot.onrender.com/ping'
 # BACKGROUND_REFRESH_URL = 'http://127.0.0.1:5000/ping' # dev env
+
+URL_TO_KEEP_VISITING = "https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298"
+PERIODIC_DURATION = 20
 
 # set connection string
 db_password = os.environ.get('DB_PASS') or None
@@ -593,8 +598,30 @@ def get_workshop_update_time():
     return None
 
 
+def visit_url_periodically():
+    while True:
+        # Make a request to the URL
+        try:
+            response = requests.get(URL_TO_KEEP_VISITING)
+            print(f"Visited {URL_TO_KEEP_VISITING}, Status Code: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error visiting {URL_TO_KEEP_VISITING}: {e}")
+        
+        # Wait x seconds plus a random buffer
+        time_to_wait = PERIODIC_DURATION + random.randint(1, PERIODIC_DURATION / 2)
+        time.sleep(time_to_wait)
+
+
+# Start the background task
+def start_background_task():
+    thread = threading.Thread(target=visit_url_periodically)
+    thread.daemon = True  # Daemonize thread to stop it when the main program exits
+    thread.start()
+
 if __name__ == '__main__':
     try:
+        start_background_task()
+
         # Start server
         if stage == 'prod':
             # Set up the scheduler for prod env
