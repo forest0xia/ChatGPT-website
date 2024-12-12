@@ -14,6 +14,7 @@ from pytz import utc
 from collections import defaultdict
 from apscheduler.schedulers.background import BackgroundScheduler
 from eventlet.timeout import Timeout
+from cachetools import TTLCache
 
 WORKSHOP_ID = 3246316298
 
@@ -28,8 +29,12 @@ MAX_WEBSITE_USER_REQUESTS_PER_HOUR = 3
 
 MAX_TOKEN_PER_REQUEST = 1000
 
+# Create a TTL cache for ip geo results with a time-to-live of x days (in seconds)
+# and a maximum size of 2000 entries (adjust as needed)
+ipResultCache = TTLCache(maxsize=2000, ttl=5 * 24 * 60 * 60)  # 5 days
+
 # Ensure the total number of messages does not exceed x, should always keep the default prompts at the top
-MAX_MESSAGES_COUNT_PER_REQUEST = 9
+MAX_MESSAGES_COUNT_PER_REQUEST = 10
 
 # default gpt model to use. Pricing: https://openai.com/api/pricing/
 GPT_MODEL_4mini = "gpt-4o-mini"
@@ -179,7 +184,7 @@ class RequestHandler:
             self.total_requests_count += 1
 
             ip_addr = get_ip_location(request)
-            app.logger.info(f"chat caller client ip address: {ip_addr}, steam_id: {steam_id}")
+            app.logger.info(f"Chat caller client ip address: {ip_addr}, steam_id: {steam_id}")
 
             return self.process_request(request, steam_id)
 
@@ -522,7 +527,14 @@ def get_ip_address(request):
     return client_ip
 
 def get_ip_location(request):
+
     client_ip = get_ip_address(request)
+    # Check if the response is already cached
+    if client_ip in ipResultCache:
+        app.logger.info(f"Client ip `{client_ip}` exists in cache.")
+        return ipResultCache[client_ip]
+
+    app.logger.info(f"Client ip `{client_ip}` does not exist in cache.")
     geolocation_res = requests.get(f"https://ipinfo.io/{client_ip}/json?token=" + ipinfo_key)
     # Get geolocation data
     geolocation = geolocation_res.json()
@@ -538,6 +550,10 @@ def get_ip_location(request):
         # "location": {"city": city, "region": region, "country": country},
         "location": f"country: {country}, region: {region}, city: {city}"
     }
+
+    # Cache the result
+    ipResultCache[client_ip] = ip_addr
+
     return ip_addr
 
 async def get_ip_location_async(request):
