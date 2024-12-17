@@ -48,6 +48,8 @@ DEV_SERVER_PORT = 5000
 # For request timeout (seconds)
 REQUEST_TIMEOUT = 10
 
+DEFAULT_MAX_FRETBOTS_DIFF = 3
+
 # check for updates. buffer with n days. just to be safe in case of time zone issues.
 DELTA_N_DAYS_SECONDS = 3 * 86400
 
@@ -67,6 +69,7 @@ mongo_client = MongoClient(db_connection_string)
 database = mongo_client['dota2bot-gamedata']
 db_collection_player = database['player-data']
 db_collection_chat = database['player-chat']
+db_collection_tracking = database['post-game-tracking']
 
 ipinfo_key = os.environ.get('IP_KEY') or None
 
@@ -369,7 +372,9 @@ def start():
     
         local_version = req_data.get("version", "") # e.g. "0.7.37c - 2024/8/31"
         players = req_data.get("pinfo", [])
+        host_id = req_data.get("host_id", None)
         fretbots = req_data.get("fretbots", {})
+        fretbots_diff = fretbots.get('difficulty', 0)
 
         local_version_timestamp = get_version_timestamp_from_request(local_version)
         update_time = get_workshop_update_time() # e.g. 1725174880
@@ -394,6 +399,21 @@ def start():
             
         utc_time = datetime.now(utc)
 
+        # max diff tracking check
+        if host_id is not None:
+            for player in players:
+                steamId = player.get('steamId', None)
+                if steamId == host_id:
+                    tracking_record = db_collection_player.find_one({"steamId": steamId})
+                    if tracking_record:
+                        allowed_diff = min(fretbots_diff, tracking_record.get("allowed_diff", DEFAULT_MAX_FRETBOTS_DIFF))
+                    else:
+                        allowed_diff = min(fretbots_diff, DEFAULT_MAX_FRETBOTS_DIFF)
+                    app.logger.info(f"Reset selected fretbots difficulty from {fretbots_diff} to {allowed_diff} for user {steamId}")
+                    fretbots_diff = allowed_diff
+                    response['allowed_diff'] = allowed_diff
+                    response['needed_wins'] = 1
+
         for player in players:
             steamId = player.get('steamId', None)
             name = player.get('name', None)
@@ -404,14 +424,14 @@ def start():
                 "createdTime": utc_time, 
                 "updatedTime": utc_time, 
                 "name": player.get('name', None), 
-                "fretbots_difficulty": fretbots.get('difficulty', None),
+                "fretbots_difficulty": fretbots_diff,
                 "fretbots_allyScale": fretbots.get('allyScale', None),
                 "duplicateCount": 1, # count the number of times the player has been involved in a new game.
             }
             override_duplicate_record = {
                 "name": player.get('name', None), 
                 "updatedTime": utc_time, 
-                "fretbots_difficulty": fretbots.get('difficulty', None),
+                "fretbots_difficulty": fretbots_diff,
                 "fretbots_allyScale": fretbots.get('allyScale', None)
             }
 
@@ -433,6 +453,7 @@ def start():
                     },
                     upsert=True
                 )
+            
     except Exception as e:
         app.logger.error(f"Api start error: {e}")
         abort(500, description=str(e))
@@ -481,6 +502,117 @@ def hello():
     
     return jsonify({"message": "hellow world"}), 200
 
+
+@app.route("/end", methods=["POST"])
+def end_game():
+    try:
+        req_data = request.get_json()
+        app.logger.info(f"Api end request data: {req_data}")
+
+        if req_data is None:
+            return jsonify({"error": "Invalid or missing JSON data"}), 400
+
+        # Extract required fields from req_data
+        host_id = req_data.get("host_id", None)
+        winning_team = req_data.get("winning_team", None)
+        fretbots_data = req_data.get("fretbots", {})
+        cheat_list = req_data.get("cheated_list", [])
+        time_passed = req_data.get("time_passed", 0)
+        difficulty = fretbots_data.get("difficulty", None)
+        enabled_chat = fretbots_data.get("enabled_cheat", None)
+        ally_scale = fretbots_data.get("ally_scale", None)
+        players = req_data.get("players", [])
+
+        if not host_id or difficulty is None:
+            return jsonify({"error": "Missing required fields: 'host_id' or 'fretbots.difficulty'"}), 400
+
+        now = datetime.now(utc)
+        # Prepare the record to be inserted or updated
+        game_record = {
+            "host_id": host_id,
+            "players": players,
+            "teams": req_data.get("teams", {}),
+            "mode": req_data.get("mode", ""),
+            "winning_team": winning_team,
+            "time_passed": time_passed,
+            "version": req_data.get("version", ""),
+            "cheated_list": cheat_list,
+            "fretbots_difficulty": difficulty,
+            "fretbots_ally_scale": ally_scale,
+            "createdTime": now,
+        }
+
+        # Insert a new record
+        db_collection_tracking.insert_one(game_record)
+
+        app.logger.info(
+            f"Inserted new post-game-tracking record for steamId: {host_id}, difficulty: {difficulty}, ally_scale: {ally_scale}"
+        )
+
+        # Now update each player's allowed_diff in player-data
+        for player in players:
+            steam_id = player.get('steam_id')
+            if not steam_id:
+                continue  # skip if no steam_id
+
+            # Check if player-data record exists
+            player_doc = db_collection_player.find_one({"steamId": steam_id})
+            if player_doc:
+                previous_allowed_diff = player_doc.get("allowed_diff", DEFAULT_MAX_FRETBOTS_DIFF)
+                time_started_in_db = player_doc.get("updatedTime", now)
+                # Make sure time_started is timezone aware:
+                if time_started_in_db.tzinfo is None:
+                    time_started_in_db = time_started_in_db.replace(tzinfo=utc)
+            else:
+                previous_allowed_diff = DEFAULT_MAX_FRETBOTS_DIFF  # default if no prior record
+                time_started_in_db = now
+
+            # Determine if we increment allowed_diff for the host
+            # Conditions:
+            # - Player's team matches winning_team
+            # - Game time > 15 minutes (900 seconds)
+            allowed_diff = previous_allowed_diff
+            begain_frebots = {
+                "allyScale": player_doc.get("fretbots_allyScale", 1),
+                "difficulty": player_doc.get("fretbots_difficulty", 0)
+            }
+            if begain_frebots["allyScale"] == ally_scale and begain_frebots["difficulty"] == difficulty:
+                if check_diff_increase_eligiable(winning_team, time_passed, player.get('team', None), cheat_list, ally_scale, now, time_started_in_db):                    
+                    allowed_diff = max(previous_allowed_diff, difficulty + 1)
+            else:
+                app.logger.warning(
+                    f"Post game fretbots settings mismatch: begain allyScale: {begain_frebots["allyScale"]}, end allyScale: {ally_scale}, begain diff: {begain_frebots["difficulty"]}, end diff: {difficulty}")
+
+            # Build update record
+            update_fields = {
+                "steamId": steam_id,
+                "name": player.get('player_name'),
+                "updatedTime": now,
+                "allowed_diff": allowed_diff
+            }
+
+            # If no record, insert with allowed_diff
+            # If record exists, update
+            db_collection_player.update_one(
+                {"steamId": steam_id},
+                {
+                    "$set": update_fields,
+                    "$inc": {"duplicateCount": 1} if player_doc else {"duplicateCount": 1}
+                },
+                upsert=True
+            )
+
+            app.logger.info(
+                f"Updated player-data for steamId: {steam_id}, allowed_diff: {allowed_diff}"
+            )
+
+        return jsonify({"message": "Post-game data processed successfully.", "allowed_diff": allowed_diff}), 200
+
+    except Exception as e:
+        app.logger.error(f"Api end error: {e}")
+        abort(500, description=str(e))
+
+
 @app.route("/chat", methods=["POST"])
 def chat():
     try:
@@ -493,6 +625,29 @@ def chat():
 def handle_internal_error(error):
     response = jsonify({"error": "Internal Server Error", "message": error.description})
     return response, 500
+
+
+def check_diff_increase_eligiable(winning_team, time_passed, player_team, cheat_list, ally_scale, now, time_started):
+    if winning_team is None:
+        app.logger.info(f"Cannot increase allowed difficulty because winning team is invalid: {winning_team}")
+        return False
+    if time_passed > 900:
+        app.logger.info(f"Cannot increase allowed difficulty because time too short: {time_passed}")
+        return False
+    if (now - time_started).total_seconds() > 900:
+        app.logger.info(f"Cannot increase allowed difficulty because start time in db was not valid: {time_started} vs now: {now}")
+        return False
+    if winning_team != player_team:
+        app.logger.info(f"Cannot increase allowed difficulty because player lost. player team: {player_team}, winning team: {winning_team}")
+        return False
+    if ally_scale > 0.5:
+        app.logger.info(f"Cannot increase allowed difficulty because ally scale is too high: {ally_scale}")
+        return False
+    if len(cheat_list) != 0:
+        app.logger.info(f"Cannot increase allowed difficulty because player cheated: {cheat_list}")
+        return False
+    return True
+
 
 """
 Filters a list of message dictionaries, keeping only those with a 'role' of 'user'.
