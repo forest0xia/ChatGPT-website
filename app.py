@@ -572,16 +572,14 @@ def end_game():
             # - Player's team matches winning_team
             # - Game time > 15 minutes (900 seconds)
             allowed_diff = previous_allowed_diff
-            begain_frebots = {
-                "allyScale": player_doc.get("fretbots_allyScale", 1),
-                "difficulty": player_doc.get("fretbots_difficulty", 0)
-            }
-            if begain_frebots["allyScale"] == ally_scale and begain_frebots["difficulty"] == difficulty:
+            begin_ally_scale = player_doc.get("fretbots_allyScale", 1)
+            begin_diff = player_doc.get("fretbots_difficulty", 0)
+            if begin_ally_scale == ally_scale and begin_diff == difficulty:
                 if check_diff_increase_eligiable(winning_team, time_passed, player.get('team', None), cheat_list, ally_scale, now, time_started_in_db):                    
                     allowed_diff = max(previous_allowed_diff, difficulty + 1)
             else:
                 app.logger.warning(
-                    f"Post game fretbots settings mismatch: begain allyScale: {begain_frebots["allyScale"]}, end allyScale: {ally_scale}, begain diff: {begain_frebots["difficulty"]}, end diff: {difficulty}")
+                    f"Post game fretbots settings mismatch: begain allyScale: {begin_ally_scale}, end allyScale: {ally_scale}, begain diff: {begin_diff}, end diff: {difficulty}")
 
             # Build update record
             update_fields = {
@@ -631,10 +629,10 @@ def check_diff_increase_eligiable(winning_team, time_passed, player_team, cheat_
     if winning_team is None:
         app.logger.info(f"Cannot increase allowed difficulty because winning team is invalid: {winning_team}")
         return False
-    if time_passed > 900:
+    if time_passed < 900:
         app.logger.info(f"Cannot increase allowed difficulty because time too short: {time_passed}")
         return False
-    if (now - time_started).total_seconds() > 900:
+    if (now - time_started).total_seconds() < 900:
         app.logger.info(f"Cannot increase allowed difficulty because start time in db was not valid: {time_started} vs now: {now}")
         return False
     if winning_team != player_team:
