@@ -375,6 +375,7 @@ def start():
         host_id = req_data.get("host_id", None)
         fretbots = req_data.get("fretbots", {})
         fretbots_diff = fretbots.get('difficulty', 0)
+        fretbots_ally_scale = fretbots.get('allyScale', 1)
 
         local_version_timestamp = get_version_timestamp_from_request(local_version)
         update_time = get_workshop_update_time() # e.g. 1725174880
@@ -400,7 +401,8 @@ def start():
         utc_time = datetime.now(utc)
 
         # max diff tracking check
-        if host_id is not None:
+        if host_id is not None and fretbots_ally_scale <= 1: # give an exception to allow players to choose higher diff by selecting an ally scale > 1
+            app.logger.info(f"Validate allowed diff for host: {host_id} with fretbots difficulty: {fretbots_diff}, ally_scale: {fretbots_ally_scale}.")
             for player in players:
                 steamId = player.get('steamId', None)
                 if steamId == host_id:
@@ -409,30 +411,34 @@ def start():
                         allowed_diff = min(fretbots_diff, tracking_record.get("allowed_diff", DEFAULT_MAX_FRETBOTS_DIFF))
                     else:
                         allowed_diff = min(fretbots_diff, DEFAULT_MAX_FRETBOTS_DIFF)
-                    app.logger.info(f"Reset selected fretbots difficulty from {fretbots_diff} to {allowed_diff} for user {steamId}")
+                    app.logger.info(f"Reset selected fretbots difficulty from {fretbots_diff} to {allowed_diff} for host {host_id}")
                     fretbots_diff = allowed_diff
                     response['allowed_diff'] = allowed_diff
                     response['needed_wins'] = 1
+                    break
+        else:
+            # host id can be none for requests from older bot script verion
+            app.logger.info(f"The host: {host_id} is able to skip allowed diff check. The fretbots difficulty: {fretbots_diff}, ally_scale: {fretbots_ally_scale}")
 
         for player in players:
             steamId = player.get('steamId', None)
-            name = player.get('name', None)
-            app.logger.info(f"Client host ip location: {ip_addr}, steam_id: {steamId}, player_name: {name}")
+            player_name = player.get('name', None)
+            app.logger.info(f"Client host ip location: {ip_addr}, steam_id: {steamId}, player_name: {player_name}")
 
             new_db_record = { 
                 "steamId": steamId, 
                 "createdTime": utc_time, 
                 "updatedTime": utc_time, 
-                "name": player.get('name', None), 
+                "name": player_name, 
                 "fretbots_difficulty": fretbots_diff,
-                "fretbots_allyScale": fretbots.get('allyScale', None),
+                "fretbots_allyScale": fretbots_ally_scale,
                 "duplicateCount": 1, # count the number of times the player has been involved in a new game.
             }
             override_duplicate_record = {
-                "name": player.get('name', None), 
+                "name": player_name, 
                 "updatedTime": utc_time, 
                 "fretbots_difficulty": fretbots_diff,
-                "fretbots_allyScale": fretbots.get('allyScale', None)
+                "fretbots_allyScale": fretbots_ally_scale
             }
 
             if ip_addr['is_valid']:
