@@ -48,7 +48,10 @@ DEV_SERVER_PORT = 5000
 # For request timeout (seconds)
 REQUEST_TIMEOUT = 10
 
+# default max fretbots diff when player is new.
 DEFAULT_MAX_FRETBOTS_DIFF = 3
+# max fretbots diff
+MAX_FRETBOTS_DIFF = 10
 
 # check for updates. buffer with n days. just to be safe in case of time zone issues.
 DELTA_N_DAYS_SECONDS = 3 * 86400
@@ -586,6 +589,7 @@ def end_game():
             else:
                 app.logger.warning(
                     f"Post game fretbots settings mismatch: begain allyScale: {begin_ally_scale}, end allyScale: {ally_scale}, begain diff: {begin_diff}, end diff: {difficulty}")
+            allowed_diff = min(allowed_diff, MAX_FRETBOTS_DIFF)
 
             # Build update record
             update_fields = {
