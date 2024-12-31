@@ -22,28 +22,6 @@ def create_app():
     # Register routes
     register_routes(app)
 
-    # Potentially start any schedulers/background tasks
-    # start_scheduler(app)
-
-    try:
-        # start_background_task()
-
-        # Start server
-        if STAGE == 'prod':
-            # Set up the scheduler for prod env
-            # app.logger.info("Start scheduler to refresh server in background")
-            # scheduler.start()
-
-            app.logger.info('Start production server')
-            from waitress import serve
-            serve(app, host = "0.0.0.0", port = PRODUCTION_SERVER_PORT, channel_timeout=REQUEST_TIMEOUT)
-        else:
-            app.logger.info('Start development server')
-            app.run(debug = True, port = DEV_SERVER_PORT)
-    except (KeyboardInterrupt, SystemExit) as e:
-        # scheduler.shutdown()
-        app.logger.error(f'Error while running server: {str(e)}')
-
     return app
 
 def register_routes(app):
