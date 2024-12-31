@@ -7,8 +7,8 @@ from src.config.settings import (
     STAGE
 )
 
+app = create_app()
 if __name__ == "__main__":
-    app = create_app()
     try:
         if STAGE == 'prod':
             app.logger.info('Start production server')

@@ -1,15 +1,6 @@
 import logging
 
 from flask import Flask
-from .config.settings import (
-    PRODUCTION_SERVER_PORT,
-    DEV_SERVER_PORT,
-    REQUEST_TIMEOUT,
-    STAGE
-)
-
-# For background tasks, if needed
-# from apscheduler.schedulers.background import BackgroundScheduler
 
 def create_app():
     app = Flask(__name__)
