@@ -1,6 +1,6 @@
-from app.main import create_app
+from src.main import create_app
 
-from app.config.settings import (
+from src.config.settings import (
     PRODUCTION_SERVER_PORT,
     DEV_SERVER_PORT,
     REQUEST_TIMEOUT,

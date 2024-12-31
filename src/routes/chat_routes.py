@@ -31,7 +31,6 @@ def get_workshop_update_time():
 
 @chat_bp.route("/chat", methods=["POST"])
 def chat():
-    current_app.logger.info(f"Api chat request data: {request.data}")
     return request_handler.handle_request(
         request,
         get_workshop_update_time,
