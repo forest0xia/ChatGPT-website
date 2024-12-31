@@ -37,7 +37,7 @@ MAX_WEBSITE_REQUESTS_PER_HOUR = 6
 MAX_WEBSITE_USER_REQUESTS_PER_HOUR = 3
 
 # Ensure the total number of messages does not exceed x, should always keep the default prompts at the top
-MAX_MESSAGES_COUNT_PER_REQUEST = 10
+MAX_MESSAGES_COUNT_PER_REQUEST = 8
 
 # Ports, timeouts
 PRODUCTION_SERVER_PORT = 5000
