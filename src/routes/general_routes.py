@@ -1,5 +1,5 @@
 # app/routes/general_routes.py
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 
 general_bp = Blueprint("general", __name__, url_prefix="/")
 
@@ -15,5 +15,5 @@ def get_uuid():
 
 @general_bp.route("/", methods=["GET"])
 def index():
-    from flask import render_template
+    # return "Hello World"
     return render_template("chat.html")
