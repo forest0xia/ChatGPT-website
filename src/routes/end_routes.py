@@ -59,6 +59,9 @@ def end_game():
             if player_doc:
                 previous_allowed_diff = player_doc.get("allowed_diff", DEFAULT_MAX_FRETBOTS_DIFF)
                 time_started_in_db = player_doc.get("updatedTime", now)
+                # Make sure time_started is timezone aware:
+                if time_started_in_db.tzinfo is None:
+                    time_started_in_db = time_started_in_db.replace(tzinfo=utc)
             else:
                 previous_allowed_diff = DEFAULT_MAX_FRETBOTS_DIFF
                 time_started_in_db = now
