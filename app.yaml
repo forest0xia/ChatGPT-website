@@ -7,4 +7,4 @@ automatic_scaling:
 
 instance_class: F1  # Smallest instance type
 
-service: open-hyper-ai
+# service: open-hyper-ai # do not name a service. use the default to avoid creating additional instances
