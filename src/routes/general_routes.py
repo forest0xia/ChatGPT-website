@@ -15,5 +15,5 @@ def get_uuid():
 
 @general_bp.route("/", methods=["GET"])
 def index():
-    # return "Hello World"
-    return render_template("chat.html")
+    return "Hello World"
+    # return render_template("chat.html")
