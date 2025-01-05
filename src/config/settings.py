@@ -4,31 +4,34 @@ import json
 # Environment
 STAGE = os.environ.get('STAGE', 'prod')
 
-# SECRET_KEY（flask项目密钥,不用管,也用不到）
-SECRET_KEY = ""
-# openAi api key
+# OpenAi api key
 OPENAI_API_KEY = ""
 
-# openAi 官方 api
+# OpenAi api
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
-# openAi 代理 api
-# OPENAI_API_URL = "https://open.aiproxy.xyz/v1/chat/completions"
+# Gemini api
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
 
 # GPT Models
 GPT_MODEL_4mini = "gpt-4o-mini"
 GPT_MODEL_4o = "gpt-4o"
 GOT_MODEL_3d5 = "gpt-3.5-turbo"
+GEMINI_MODEL_1_5_FLASH = "gemini-1.5-flash"
 
 # Max tokens per GPT request
 MAX_TOKEN_PER_REQUEST = 1000
 
 
-# Workshop
+# Steam Workshop
 WORKSHOP_ID = 3246316298
 WORKSHOP_DETAILS_URL = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
 
+# only allow x requests for individual dota2 (from a steam client) user per min.
+MAX_USER_REQUESTS_PER_MIN = 5
+# only allow x requests across all dota2 (from a steam client) users per min.
+MAX_SERVICE_REQUESTS_PER_MIN = 15
 # only allow x requests across all dota2 (from a steam client) users per hour.
-MAX_REQUEST_PER_HOUR = 90
+MAX_REQUEST_PER_HOUR = 60
 # only allow x requests for individual dota2 (from a steam client) user per hour.
 MAX_USER_REQUESTS_PER_HOUR = 30
 # only allow x requests across all website users (not from a steam client) per hour.

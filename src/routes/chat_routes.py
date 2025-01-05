@@ -1,5 +1,7 @@
 from flask import Blueprint, request, current_app
-from ..services.request_handler import RequestHandler
+
+from src.services.gemini_service import process_gemini_request
+from ..services.chat_request_handler import ChatRequestHandler
 from ..services.openai_service import process_openai_request
 from ..utils.message_filter_utils import filter_user_messages
 
@@ -10,7 +12,7 @@ from ..config.settings import (
 chat_bp = Blueprint("chat", __name__, url_prefix="/")
 
 # The single instance of RequestHandler for your app
-request_handler = RequestHandler()
+chat_request_handler = ChatRequestHandler()
 
 def get_workshop_update_time():
     import requests
@@ -31,9 +33,10 @@ def get_workshop_update_time():
 
 @chat_bp.route("/chat", methods=["POST"])
 def chat():
-    return request_handler.handle_request(
+    return chat_request_handler.chat_handle_request(
         request,
         get_workshop_update_time,
         filter_user_messages,
-        process_openai_request
+        process_gemini_request
+        # process_openai_request
     )
