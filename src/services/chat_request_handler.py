@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 from collections import defaultdict
+import json
 from flask import request, jsonify, current_app
+
+from src.utils.message_filter_utils import verify_is_chat_command
 
 from ..config.settings import (
     MAX_USER_REQUESTS_PER_MIN,
@@ -198,6 +201,11 @@ class ChatRequestHandler:
         utc_time = datetime.now(utc)
         last_message = messages[-1].get('content', '')
 
+        last_message_said = json.loads(last_message)["said"]
+        if verify_is_chat_command(last_message_said):
+            current_app.logger.warning(f"Message contains chat command: {last_message_said}. Stop processing.")
+            return ""
+
         new_db_record = {
             "createdTime": utc_time,
             "updatedTime": utc_time,
@@ -220,5 +228,9 @@ class ChatRequestHandler:
             current_app.logger.error(f"Failed to persist to db: {str(e)}")
 
         gpt_response = process_gpt_request(flask_request, messages)
-        current_app.logger.info(f"\nLast message: {last_message}. \nGpt Response: {gpt_response}")
+        chat_item_for_log = {
+            "user_message": last_message_said,
+            "gpt_response": gpt_response
+        }
+        current_app.logger.info(f"Processed chat request: {chat_item_for_log}")
         return gpt_response

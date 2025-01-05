@@ -45,7 +45,7 @@ MAX_WEBSITE_REQUESTS_PER_HOUR = 6
 MAX_WEBSITE_USER_REQUESTS_PER_HOUR = 3
 
 # Ensure the total number of messages does not exceed x, should always keep the default prompts at the top
-MAX_MESSAGES_COUNT_PER_REQUEST = 8
+MAX_MESSAGES_COUNT_PER_REQUEST = 2 # first is game info, second is last msg. 0 for extra memory.
 
 # Ports, timeouts
 PRODUCTION_SERVER_PORT = 5000
@@ -79,3 +79,4 @@ COUNTRY_NAMES_JSON = os.path.join(os.path.dirname(__file__), '..', 'config', 'co
 # Load country names from the JSON file once
 with open(COUNTRY_NAMES_JSON, 'r') as f:
     COUNTRY_NAMES = json.load(f)
+
