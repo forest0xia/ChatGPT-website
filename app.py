@@ -12,8 +12,7 @@ if __name__ == "__main__":
     try:
         if STAGE == 'prod':
             app.logger.info('Start production server')
-            from waitress import serve
-            serve(app, host = "0.0.0.0", port = PRODUCTION_SERVER_PORT, channel_timeout=REQUEST_TIMEOUT)
+            app.run(debug = False, port = PRODUCTION_SERVER_PORT)
         else:
             app.logger.info('Start development server')
             app.run(debug = True, port = DEV_SERVER_PORT)
