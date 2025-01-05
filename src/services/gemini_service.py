@@ -14,6 +14,11 @@ from ..config.default_prompts import (
     DEFAULT_PROMPTS
 )
 
+from ..utils.gcp_utils import (
+    GEMINI_API_KEY
+)
+
+
 def process_gemini_request(flask_request, user_messages):
     """
     Builds the final prompt, calls the Gemini API, and streams back the response.
@@ -38,6 +43,7 @@ def process_gemini_request(flask_request, user_messages):
         or req_data.get("apiKey")
         or current_app.config.get("GEMINI_API_KEY")
         or os.environ.get('GEMINI_API_KEY')
+        or GEMINI_API_KEY
     )
     if not apiKey:
          return jsonify({"error": "API Key not provided."}), 400

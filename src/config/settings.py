@@ -1,8 +1,13 @@
 import os
 import json
+from src.utils.gcp_utils import (
+    ENV_STAGE,
+    ENV_DB_PASS,
+    ENV_IP_KEY
+)
 
 # Environment
-STAGE = os.environ.get('STAGE', 'prod')
+STAGE = os.environ.get('STAGE') or ENV_STAGE or 'prod'
 
 # OpenAi api key
 OPENAI_API_KEY = ""
@@ -60,12 +65,12 @@ URL_TO_KEEP_VISITING = "https://steamcommunity.com/sharedfiles/filedetails/?id=3
 PERIODIC_DURATION = 20
 
 # Database
-DB_PASS = os.environ.get('DB_PASS')
+DB_PASS = os.environ.get('DB_PASS') or ENV_DB_PASS
 if DB_PASS is None:
     print('DB_PASS is None. Check your environment settings.')
 
 # IP info key
-IPINFO_KEY = os.environ.get('IP_KEY')
+IPINFO_KEY = os.environ.get('IP_KEY') or ENV_IP_KEY
 if IPINFO_KEY is None:
     print('IPINFO_KEY is None. Check your environment settings.')
 

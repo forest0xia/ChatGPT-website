@@ -12,6 +12,10 @@ from ..config.settings import (
     REQUEST_TIMEOUT
 )
 
+from ..utils.gcp_utils import (
+    OPENAI_API_KEY
+)
+
 def process_openai_request(flask_request, user_messages):
     """
     Builds the final prompt, calls the OpenAI API, and streams back the response.
@@ -46,6 +50,7 @@ def process_openai_request(flask_request, user_messages):
         or req_data.get("apiKey")
         or current_app.config.get("OPENAI_API_KEY")
         or os.environ.get('OPENAI_API_KEY')
+        or OPENAI_API_KEY
     )
 
     data = {
