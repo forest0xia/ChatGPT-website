@@ -92,7 +92,7 @@ def process_gemini_request(flask_request, user_messages):
         "x-goog-api-key": apiKey # needed when calling gemini api key
     }
 
-    current_app.logger.error(f"Currently using model: {current_use_model}")
+    current_app.logger.info(f"Currently using model: {current_use_model}")
     request_url = current_app.config["GEMINI_API_URL"].format(model=current_use_model, key=apiKey) # GEMINI_API_URL should have placeholder for model and api key
 
     try:
