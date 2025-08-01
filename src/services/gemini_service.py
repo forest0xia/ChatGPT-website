@@ -6,9 +6,12 @@ import os
 
 from ..config.settings import (
     MAX_TOKEN_PER_REQUEST,
-    MAX_MESSAGES_COUNT_PER_REQUEST,
-    GEMINI_MODEL_1_5_FLASH,
+    MAX_MESSAGES_COUNT_PER_REQUEST
 )
+
+GEMINI_MODEL_1_5_FLASH = "gemini-1.5-flash"
+GEMINI_MODEL_2_0_FLASH_Lite = "gemini-2.0-flash-lite"
+GEMINI_MODEL_2_5_FLASH_Lite = "gemini-2.5-flash-lite"
 
 from ..config.default_prompts import (
     DEFAULT_PROMPTS
@@ -18,8 +21,15 @@ from ..utils.gcp_utils import (
     GEMINI_API_KEY
 )
 
+availabie_models = [
+    GEMINI_MODEL_1_5_FLASH,
+    GEMINI_MODEL_2_0_FLASH_Lite,
+    GEMINI_MODEL_2_5_FLASH_Lite]
+current_use_model_index = 0
+current_use_model = availabie_models[current_use_model_index]
 
 def process_gemini_request(flask_request, user_messages):
+    global current_use_model, current_use_model_index
     """
     Builds the final prompt, calls the Gemini API, and streams back the response.
     """
@@ -82,7 +92,8 @@ def process_gemini_request(flask_request, user_messages):
         "x-goog-api-key": apiKey # needed when calling gemini api key
     }
 
-    request_url = current_app.config["GEMINI_API_URL"].format(model=GEMINI_MODEL_1_5_FLASH, key=apiKey) # GEMINI_API_URL should have placeholder for model and api key
+    current_app.logger.error(f"Currently using model: {current_use_model}")
+    request_url = current_app.config["GEMINI_API_URL"].format(model=current_use_model, key=apiKey) # GEMINI_API_URL should have placeholder for model and api key
 
     try:
         response = requests.post(
@@ -109,6 +120,9 @@ def process_gemini_request(flask_request, user_messages):
                 text_content = "".join([part["text"] for part in parts]).strip().replace('\n', '')
                 return text_content
         if 'error' in response_json and response_json['error']['code'] == 429:
+                # switch model for next call
+                current_use_model_index = current_use_model_index + 1
+                current_use_model = availabie_models[current_use_model_index % len(availabie_models)]
                 return "LLM quota exceeded. Wait and try again later."
         current_app.logger.error(f"No response content from API: {response_json}")
         return jsonify({"error": "No response content from API"})

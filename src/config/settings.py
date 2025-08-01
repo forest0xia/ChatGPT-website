@@ -21,7 +21,6 @@ GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model
 GPT_MODEL_4mini = "gpt-4o-mini"
 GPT_MODEL_4o = "gpt-4o"
 GOT_MODEL_3d5 = "gpt-3.5-turbo"
-GEMINI_MODEL_1_5_FLASH = "gemini-1.5-flash"
 
 # Max tokens per GPT request
 MAX_TOKEN_PER_REQUEST = 1000
