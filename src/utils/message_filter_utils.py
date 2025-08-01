@@ -16,5 +16,7 @@ def verify_is_chat_command(input_str):
     for cmd in CHAT_COMMANDS:
         if input_str.startswith(cmd):
             return True
+        if 'pos' in input_str and len(input_str) < 7:
+            return True
     
     return False

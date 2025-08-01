@@ -29,6 +29,7 @@ CHAT_COMMANDS = [
         'info',         # basic info for current difficulty/stats
         'speak', 
         'sp',           # speak specific language (alias)
+        'pos'
 
         # locale commands
         'zh', 'ru', 'en', 'ja' 
