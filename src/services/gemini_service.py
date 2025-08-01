@@ -94,20 +94,24 @@ def process_gemini_request(flask_request, user_messages):
         )
         # print("Gemini response:", response.text)
     except requests.exceptions.Timeout:
+        current_app.logger.error(f"Request timed out!")
         return jsonify({"error": {"message": "Request timed out!", "type": "timeout_error"}})
     except Exception as e:
         current_app.logger.error(f"Error calling Gemini API: {e}")
         return jsonify({"error": str(e)}), 500
 
     try:
-       response_json = response.json()
-       if "candidates" in response_json and response_json["candidates"]:
-           candidate = response_json["candidates"][0]
-           if 'content' in candidate and 'parts' in candidate["content"]:
+        response_json = response.json()
+        if "candidates" in response_json and response_json["candidates"]:
+            candidate = response_json["candidates"][0]
+            if 'content' in candidate and 'parts' in candidate["content"]:
                 parts = candidate["content"]["parts"]
                 text_content = "".join([part["text"] for part in parts]).strip().replace('\n', '')
                 return text_content
-       else:
-           return jsonify({"error": "No response content from API"})
-    except json.JSONDecodeError:
+        if 'error' in response_json and response_json['error']['code'] == 429:
+                return "LLM quota exceeded. Wait and try again later."
+        current_app.logger.error(f"No response content from API: {response_json}")
+        return jsonify({"error": "No response content from API"})
+    except json.JSONDecodeError as e:
+        current_app.logger.error(f"Failed to parse JSON from API response: {e}")
         return jsonify({"error": "Failed to parse JSON from API response"}), 500
