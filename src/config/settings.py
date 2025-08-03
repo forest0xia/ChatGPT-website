@@ -17,6 +17,9 @@ OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 # Gemini api
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
 
+# Minimal length of words the user needs to send to be able to trigger meaningful chats with LLM.
+MIN_USER_CHAT_LENGTH_FOR_LLM = 3
+
 # GPT Models
 GPT_MODEL_4mini = "gpt-4o-mini"
 GPT_MODEL_4o = "gpt-4o"

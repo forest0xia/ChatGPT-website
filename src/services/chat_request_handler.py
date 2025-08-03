@@ -3,7 +3,7 @@ from collections import defaultdict
 import json
 from flask import request, jsonify, current_app
 
-from src.utils.message_filter_utils import verify_is_chat_command
+from src.utils.message_filter_utils import should_skip_llm_chat
 
 from ..config.settings import (
     MAX_USER_REQUESTS_PER_MIN,
@@ -114,13 +114,13 @@ class ChatRequestHandler:
             if current_time - self.start_time_per_min >= timedelta(minutes=1):
                 self.total_requests_count_per_min = 0
                 self.start_time_per_min = current_time
-                current_app.logger.info("Minute total request count reset")
+                current_app.logger.info("Reset per minute total request counter")
 
             user_start_time_per_min = self.user_start_times_per_min[user_tracking_id]
             if current_time - user_start_time_per_min >= timedelta(minutes=1):
                 self.user_requests_count_per_min[user_tracking_id] = 0
                 self.user_start_times_per_min[user_tracking_id] = current_time
-                current_app.logger.info(f"Minute user request count reset, user: {steam_id}")
+                current_app.logger.info(f"Reset per minute per user request counter, user: {steam_id}")
 
 
             # Enforce request limits (per min)
@@ -202,8 +202,8 @@ class ChatRequestHandler:
         last_message = messages[-1].get('content', '')
 
         last_message_said = json.loads(last_message)["said"]
-        if verify_is_chat_command(last_message_said):
-            current_app.logger.warning(f"Message contains chat command: {last_message_said}. Stop processing.")
+        if should_skip_llm_chat(last_message_said):
+            current_app.logger.info(f"Message contains chat command: {last_message_said}. Stopped processing it.")
             return ""
 
         new_db_record = {
