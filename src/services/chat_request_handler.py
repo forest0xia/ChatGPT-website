@@ -203,7 +203,7 @@ class ChatRequestHandler:
 
         last_message_said = json.loads(last_message)["said"]
         if should_skip_llm_chat(last_message_said):
-            current_app.logger.info(f"Message contains chat command: {last_message_said}. Stopped processing it.")
+            current_app.logger.info(f"Skipped processing chat: {last_message_said}.")
             return ""
 
         new_db_record = {
