@@ -9,7 +9,7 @@ from ..config.settings import (
     MAX_MESSAGES_COUNT_PER_REQUEST
 )
 
-GEMINI_MODEL_1_5_FLASH = "gemini-1.5-flash"
+GEMINI_MODEL_2_5_FLASH = "gemini-2.5-flash"
 GEMINI_MODEL_2_0_FLASH_Lite = "gemini-2.0-flash-lite"
 GEMINI_MODEL_2_5_FLASH_Lite = "gemini-2.5-flash-lite"
 
@@ -22,9 +22,9 @@ from ..utils.gcp_utils import (
 )
 
 availabie_models = [
-    GEMINI_MODEL_1_5_FLASH,
     GEMINI_MODEL_2_0_FLASH_Lite,
-    GEMINI_MODEL_2_5_FLASH_Lite]
+    GEMINI_MODEL_2_5_FLASH_Lite,
+    GEMINI_MODEL_2_5_FLASH]
 current_use_model_index = 0
 current_use_model = availabie_models[current_use_model_index]
 
